@@ -6,7 +6,29 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HeyKJ/gkc-sfbl.git"
+  },
+  "keywords": [
+    "by",
+    "split",
+    "split file",
+    "split-file",
+    "line",
+    "file",
+    "file line",
+    "file-line",
+    "split file line",
+    "split file by line",
+    "kimchi",
+    "godkimchi"
+  ],
+  "bugs": {
+    "url": "https://github.com/HeyKJ/gkc-sfbl/issues"
+  },
+  "homepage": "https://github.com/HeyKJ/gkc-sfbl#readme",
+  "author": "godkimchi",
   "license": "ISC",
   "dependencies": {
     "godkimchi-read-line": "^1.0.2"
