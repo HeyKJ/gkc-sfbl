@@ -1,0 +1,14 @@
+{
+  "name": "gkc-sfbl",
+  "version": "1.0.0",
+  "description": "kimchi style's split file by line number module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "godkimchi-read-line": "^1.0.2"
+  }
+}
