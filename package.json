@@ -1,6 +1,6 @@
 {
   "name": "gkc-sfbl",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "kimchi style's split file by line number module",
   "main": "index.js",
   "scripts": {
@@ -29,7 +29,7 @@
   },
   "homepage": "https://github.com/HeyKJ/gkc-sfbl#readme",
   "author": "godkimchi",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "godkimchi-read-line": "^1.0.2"
   }
