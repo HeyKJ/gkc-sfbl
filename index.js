@@ -15,14 +15,14 @@ module.exports = async function (filepath = '', yourOption = DEFAULT_OPTION, cb 
 
   var label = 0
   var header
-  var splitFilepath
+  var stream
   const dirname = path.dirname(filepath)
   const ext = path.extname(filepath)
   const filename = path.basename(filepath).replace(new RegExp(ext), '')
 
   const splitFilepaths = []
 
-  await readline(filepath, { encoding: option.encoding }, (err, response) => {
+  await readline(filepath, { encoding: option.encoding }, async (err, response) => {
     if (err) {
       throw err
     }
@@ -36,18 +36,28 @@ module.exports = async function (filepath = '', yourOption = DEFAULT_OPTION, cb 
     if (lineCount > option.limit * label) {
       // next file label path
       ++label
-      splitFilepath = dirname + path.sep + filename + '_' + label + ext
+      const splitFilepath = dirname + path.sep + filename + '_' + label + ext
       splitFilepaths.push(splitFilepath)
+      // before createWriteStream, make sure write remain buffer
+      if (stream) {
+        await end(stream)
+      }
+
+      stream = fs.createWriteStream(splitFilepath, { flags: 'a+' })
       // if allHasHeader = true, all file has all file has header
-      if (option.allHasHeader === true) {
-        fs.appendFileSync(splitFilepath, header + '\n')
+      if (label > 1 && option.allHasHeader === true) {
+        await write(stream, header)
       }
     }
 
-    fs.appendFileSync(splitFilepath, line + '\n')
+    await write(stream, line)
 
     return true
   })
+
+  if (stream) {
+    await end(stream)
+  }
 
   return splitFilepaths
 }
@@ -57,5 +67,28 @@ function setupOption (option = {}, yourOption = {}) {
     if (option.hasOwnProperty(key)) {
       option[key] = yourOption[key]
     }
+  })
+}
+
+async function write (stream = {}, line = '') {
+  if (!stream.write(line + '\n')) {
+    await waitDrain(stream)
+  }
+}
+
+function waitDrain (stream = {}) {
+  return new Promise(resolve => {
+    stream.once('drain', () => resolve())
+  })
+}
+
+async function end (stream = {}) {
+  stream.end()
+  await waitClose(stream)
+}
+
+function waitClose (stream = {}) {
+  return new Promise(resolve => {
+    stream.once('close', () => resolve())
   })
 }
