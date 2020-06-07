@@ -14,16 +14,12 @@ sfbl('yoru file path', { limit: 15000, encoding: 'utf8', allHasHeader: false })
   .finally(() => process.exit())
 ```
 
-### sfbl(path, [options], callback)
+### sfbl(path, [options])
 `path` string  
 `options` object
 * `allHasHeader` boolean **default** false **if true, all split file has header**
 * `encoding` string **default** utf8 **check iconv-lite**
 * `limit` number **default** 1000 **each file's max line number**
-
-`callback` function
-* `err` Error
-* `response` array **split file paths**
 
 License
 ----
