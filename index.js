@@ -1,6 +1,6 @@
 const path = require('path')
 const readline = require('godkimchi-read-line')
-const { createWriteStream } = require('fs')
+const fs = require('fs')
 
 const DEFAULT_OPTION = { limit: 1000, encoding: 'utf8', allHasHeader: false }
 
@@ -14,8 +14,8 @@ module.exports = async function (filepath = '', yourOption = DEFAULT_OPTION, cb 
   setupOption(option, yourOption)
 
   var label = 0
-  var stream
   var header
+  var stream
   const dirname = path.dirname(filepath)
   const ext = path.extname(filepath)
   const filename = path.basename(filepath).replace(new RegExp(ext), '')
@@ -38,26 +38,25 @@ module.exports = async function (filepath = '', yourOption = DEFAULT_OPTION, cb 
       ++label
       const splitFilepath = dirname + path.sep + filename + '_' + label + ext
       splitFilepaths.push(splitFilepath)
-      // flush before change stream
+      // before createWriteStream, make sure write remain buffer
       if (stream) {
-        await close(stream)
+        await end(stream)
       }
 
-      stream = createWriteStream(splitFilepath, { flags: 'ax+' })
+      stream = fs.createWriteStream(splitFilepath, { flags: 'a+' })
       // if allHasHeader = true, all file has all file has header
-      if (option.allHasHeader === true) {
-        write(stream, header)
+      if (label > 1 && option.allHasHeader === true) {
+        await write(stream, header)
       }
     }
 
-    write(stream, line)
+    await write(stream, line)
 
     return true
   })
-  // flush before end process
+
   if (stream) {
-    stream.end()
-    await waitClose(stream)
+    await end(stream)
   }
 
   return splitFilepaths
@@ -71,25 +70,25 @@ function setupOption (option = {}, yourOption = {}) {
   })
 }
 
-async function close (stream) {
-  stream.end()
-  await waitClose(stream)
-}
-
-function waitClose (stream) {
-  return new Promise(resolve => {
-    stream.once('close', () => resolve())
-  })
-}
-
-async function write (stream, line) {
+async function write (stream = {}, line = '') {
   if (!stream.write(line + '\n')) {
     await waitDrain(stream)
   }
 }
 
-function waitDrain (stream) {
+function waitDrain (stream = {}) {
   return new Promise(resolve => {
     stream.once('drain', () => resolve())
+  })
+}
+
+async function end (stream = {}) {
+  stream.end()
+  await waitClose(stream)
+}
+
+function waitClose (stream = {}) {
+  return new Promise(resolve => {
+    stream.once('close', () => resolve())
   })
 }
