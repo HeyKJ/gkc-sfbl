@@ -12,7 +12,7 @@ const DEFAULT_OPTION = {
     },
     split: {
       eachLines: 1000,
-      allHasHeader: true,
+      allHasHeader: false,
       storage: './'
     }
   }
