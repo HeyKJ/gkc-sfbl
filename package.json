@@ -1,7 +1,7 @@
 {
   "name": "gkc-sfbl",
-  "version": "1.1.0",
-  "description": "kimchi style's split file by line number module",
+  "version": "2.0.0",
+  "description": "kimchi style's split file by line count module",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -11,18 +11,10 @@
     "url": "git+https://github.com/HeyKJ/gkc-sfbl.git"
   },
   "keywords": [
-    "by",
     "split",
-    "split file",
-    "split-file",
-    "line",
     "file",
-    "file line",
-    "file-line",
-    "split file line",
-    "split file by line",
-    "kimchi",
-    "godkimchi"
+    "line",
+    "kimchi"
   ],
   "bugs": {
     "url": "https://github.com/HeyKJ/gkc-sfbl/issues"
@@ -31,6 +23,8 @@
   "author": "godkimchi",
   "license": "MIT",
   "dependencies": {
-    "godkimchi-read-line": "^1.0.2"
+    "iconv-lite": "^0.6.2",
+    "lodash": "^4.17.20",
+    "n-readlines": "^1.0.1"
   }
 }

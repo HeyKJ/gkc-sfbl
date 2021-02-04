@@ -1,94 +1,79 @@
 const path = require('path')
-const readline = require('godkimchi-read-line')
 const fs = require('fs')
+const _ = require('lodash')
+const ReadLine = require('n-readlines')
+const iconv = require('iconv-lite')
 
-const DEFAULT_OPTION = { limit: 1000, encoding: 'utf8', allHasHeader: false }
-
-module.exports = async function (filepath = '', yourOption = DEFAULT_OPTION, cb = undefined) {
-  if (typeof arguments[1] === 'function') {
-    yourOption = DEFAULT_OPTION
-    cb = arguments[1]
-  }
-
-  const option = Object.assign({}, DEFAULT_OPTION)
-  setupOption(option, yourOption)
-
-  var label = 0
-  var header
-  var stream
-  const dirname = path.dirname(filepath)
-  const ext = path.extname(filepath)
-  const filename = path.basename(filepath).replace(new RegExp(ext), '')
-
-  const splitFilepaths = []
-
-  await readline(filepath, { encoding: option.encoding }, async (err, response) => {
-    if (err) {
-      throw err
+const DEFAULT_OPTION = {
+  file: {
+    source: {
+      encoding: 'utf8',
+      deleteOnSuccess: false
+    },
+    split: {
+      eachLines: 1000,
+      allHasHeader: true,
+      storage: './'
     }
-
-    const { line, lineCount } = response
-
-    if (lineCount === 1) {
-      header = line
-    }
-
-    if (lineCount > option.limit * label) {
-      // next file label path
-      ++label
-      const splitFilepath = dirname + path.sep + filename + '_' + label + ext
-      splitFilepaths.push(splitFilepath)
-      // before createWriteStream, make sure write remain buffer
-      if (stream) {
-        await end(stream)
-      }
-
-      stream = fs.createWriteStream(splitFilepath, { flags: 'a+' })
-      // if allHasHeader = true, all file has all file has header
-      if (label > 1 && option.allHasHeader === true) {
-        await write(stream, header)
-      }
-    }
-
-    await write(stream, line)
-
-    return true
-  })
-
-  if (stream) {
-    await end(stream)
-  }
-
-  return splitFilepaths
-}
-
-function setupOption (option = {}, yourOption = {}) {
-  Object.keys(yourOption).forEach(key => {
-    if (option.hasOwnProperty(key)) {
-      option[key] = yourOption[key]
-    }
-  })
-}
-
-async function write (stream = {}, line = '') {
-  if (!stream.write(line + '\n')) {
-    await waitDrain(stream)
   }
 }
 
-function waitDrain (stream = {}) {
-  return new Promise(resolve => {
-    stream.once('drain', () => resolve())
-  })
+module.exports = async (filepath, yourOption = DEFAULT_OPTION) => {
+  try {
+    validateSource(filepath)
+    const option = _.merge({}, DEFAULT_OPTION, yourOption)
+    const storage = setupStorage(filepath, option.split.storage)
+
+    let line
+    let lineCount = 0
+    let header
+    let label = 1
+    const liner = new ReadLine(filepath)
+
+    while (line = liner.next()) {
+      line = iconv.decode(line, option.source.encoding)
+
+      debugger
+      if (++lineCount === 1 && option.split.allHasHeader === true) {
+        header = line
+        continue
+      } else if (lineCount % option.split.eachLines === 0)
+        label++
+
+      const { name, ext } = path.parse(filepath)
+      const newFilename = name + '_' + label + ext
+      const newFilepath = path.join(storage, newFilename)
+
+      if (fs.existsSync(newFilepath) === false && option.split.allHasHeader === true)
+        await fs.promises.appendFile(newFilepath, header + '\n')
+
+      await fs.promises.appendFile(newFilepath, line + '\n')
+    }
+
+    if (option.source.deleteOnSuccess === true)
+      fs.unlinkSync(filepath)
+  } catch (e) {
+    throw e
+  }
 }
 
-async function end (stream = {}) {
-  stream.end()
-  await waitClose(stream)
+function validateSource (filepath) {
+  if (!filepath)
+    throw Error('first argument filepath is empty')
+  else if (fs.existsSync(filepath) === false)
+    throw Error(`${filepath} not exists`)
 }
 
-function waitClose (stream = {}) {
-  return new Promise(resolve => {
-    stream.once('close', () => resolve())
-  })
+function setupStorage (standardpath, storage) {
+  const dirpath = path.dirname(standardpath)
+
+  if (!storage)
+    return dirpath
+
+  const _storage = path.join(dirpath, storage)
+
+  if (fs.existsSync(_storage) === false)
+    fs.mkdirSync(_storage, { recursive: true })
+
+  return _storage
 }
