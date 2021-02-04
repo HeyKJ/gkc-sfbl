@@ -22,36 +22,41 @@ module.exports = async (filepath, yourOption = DEFAULT_OPTION) => {
   try {
     validateSource(filepath)
     const option = _.merge({}, DEFAULT_OPTION, yourOption)
-    const storage = setupStorage(filepath, option.split.storage)
+    const storage = setupStorage(filepath, option.file.split.storage)
 
-    let line
-    let lineCount = 0
     let header
     let label = 1
+    let line
+    let lineCount = 0
     const liner = new ReadLine(filepath)
 
     while (line = liner.next()) {
-      line = iconv.decode(line, option.source.encoding)
+      line = iconv.decode(line, option.file.source.encoding)
 
       debugger
-      if (++lineCount === 1 && option.split.allHasHeader === true) {
+      if (++lineCount === 1 && option.file.split.allHasHeader === true) {
         header = line
         continue
-      } else if (lineCount % option.split.eachLines === 0)
+      } else if (lineCount % option.file.split.eachLines === 0)
         label++
 
       const { name, ext } = path.parse(filepath)
       const newFilename = name + '_' + label + ext
       const newFilepath = path.join(storage, newFilename)
 
-      if (fs.existsSync(newFilepath) === false && option.split.allHasHeader === true)
+      if (fs.existsSync(newFilepath) === false && option.file.split.allHasHeader === true)
         await fs.promises.appendFile(newFilepath, header + '\n')
 
       await fs.promises.appendFile(newFilepath, line + '\n')
     }
 
-    if (option.source.deleteOnSuccess === true)
+    if (option.file.source.deleteOnSuccess === true)
       fs.unlinkSync(filepath)
+
+    return {
+      storage: storage,
+      splited: label
+    }
   } catch (e) {
     throw e
   }
