@@ -24,7 +24,7 @@ sfbl('/var/log/abc.txt', {
 })
   .then(response => {
     // response = { storage: '/var/log', splited: 6 }
-    // This means that the divided files are stored in /home/var and the number of divided files is 6.
+    // This means that the divided files are stored in /var/log and the number of divided files is 6.
     console.log(response)
   })
   .catch(error => {
