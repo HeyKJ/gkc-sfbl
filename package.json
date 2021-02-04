@@ -1,6 +1,6 @@
 {
   "name": "gkc-sfbl",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "kimchi style's split file by line count module",
   "main": "index.js",
   "scripts": {
