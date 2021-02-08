@@ -1,8 +1,11 @@
-const path = require('path')
-const fs = require('fs')
 const _ = require('lodash')
-const ReadLine = require('n-readlines')
+const fs = require('fs')
+const path = require('path')
 const iconv = require('iconv-lite')
+const util = require('util')
+const ReadLine = require('n-readlines')
+const validate = require('./libs/validator')
+const Spliter = require('./libs/Spliter')
 
 const DEFAULT_OPTION = {
   file: {
@@ -11,6 +14,8 @@ const DEFAULT_OPTION = {
       deleteOnSuccess: false
     },
     split: {
+      encoding: 'utf8',
+      lineDelimiter: '\n',
       eachLines: 1000,
       allHasHeader: false,
       storage: './'
@@ -19,66 +24,45 @@ const DEFAULT_OPTION = {
 }
 
 module.exports = async (filepath, yourOption = DEFAULT_OPTION) => {
-  try {
-    validateSource(filepath)
-    const option = _.merge({}, DEFAULT_OPTION, yourOption)
-    const storage = setupStorage(filepath, option.file.split.storage)
+  let spliter
 
-    let header
-    let label = 1
+  try {
+    validate(filepath)
+
+    const option = _.merge({}, DEFAULT_OPTION, yourOption)
+    const { dir, name, ext } = path.parse(filepath)
+    spliter = new Spliter()
+    spliter.splitBy(option.file.split.eachLines)
+           .saveAt(path.join(dir, option.file.split.storage))
+           .saveLike(name + '_{{numbering}}' + ext)
+
     let line
     let lineCount = 0
     const liner = new ReadLine(filepath)
 
     while (line = liner.next()) {
       line = iconv.decode(line, option.file.source.encoding)
+      line = iconv.encode(line.replace(/\r/, '') + option.file.split.lineDelimiter, option.file.split.encoding)
 
-      debugger
       if (++lineCount === 1 && option.file.split.allHasHeader === true) {
-        header = line
+        spliter.header = line
         continue
-      } else if (lineCount % option.file.split.eachLines === 0)
-        label++
+      }
 
-      const { name, ext } = path.parse(filepath)
-      const newFilename = name + '_' + label + ext
-      const newFilepath = path.join(storage, newFilename)
-
-      if (fs.existsSync(newFilepath) === false && option.file.split.allHasHeader === true)
-        await fs.promises.appendFile(newFilepath, header + '\n')
-
-      await fs.promises.appendFile(newFilepath, line + '\n')
+      await spliter.push(line)
     }
 
     if (option.file.source.deleteOnSuccess === true)
       fs.unlinkSync(filepath)
 
     return {
-      storage: storage,
-      splited: label
+      storage: spliter.storage,
+      splited: spliter.fileNumber
     }
   } catch (e) {
     throw e
+  } finally {
+    if (spliter)
+      spliter.close()
   }
-}
-
-function validateSource (filepath) {
-  if (!filepath)
-    throw Error('first argument filepath is empty')
-  else if (fs.existsSync(filepath) === false)
-    throw Error(`${filepath} not exists`)
-}
-
-function setupStorage (standardpath, storage) {
-  const dirpath = path.dirname(standardpath)
-
-  if (!storage)
-    return dirpath
-
-  const _storage = path.join(dirpath, storage)
-
-  if (fs.existsSync(_storage) === false)
-    fs.mkdirSync(_storage, { recursive: true })
-
-  return _storage
 }
