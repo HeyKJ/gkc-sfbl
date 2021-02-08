@@ -15,10 +15,12 @@ sfbl('/var/log/abc.txt', {
       deleteOnSuccess: false // If true, abc.txt will be deleted after split file operation is finished. Default false
     },
     split: {
+      encoding: 'utf8', // This is the encoding value of the divided files. Default utf8
+      lineDelimiter: '\r\n', // Line delimiter. Default \n
       eachLines: 1000, // Divides the file by 1000 lines. Default 1000
       allHasHeader: false, // The first line of abc.txt becomes the header. If the value is true, the header is placed on the first line of all divided files. Default false
       storage: './' // The directory path to store the split files. It is based on the directory path of the file to be split. In the example, /var/log is the storage. Default ./
-      // storage: './result' If you set it to ../result, it will create a directory /var/result and store the split files in /var/result.
+      // storage: '../result' If you set it to ../result, it will create a directory /var/result and store the split files in /var/result.
     }
   }
 })
