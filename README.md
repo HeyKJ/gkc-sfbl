@@ -2,25 +2,40 @@
 
 [![Build Status](https://travis-ci.org/joemccann/dillinger.svg?branch=master)](https://travis-ci.org/joemccann/dillinger)
 
-kimchi style's split file by line moudle.
+kimchi style's split file by line count moudle.
 
 ### Example
 ```javascript
 const sfbl = require('gkc-sfbl')
 
-sfbl('yoru file path', { limit: 15000, encoding: 'utf8', allHasHeader: false })
-  .then(response => console.log(response))
-  .catch(error => console.error(error))
-  .finally(() => process.exit())
+sfbl('/var/log/abc.txt', {
+  file: {
+    source: {
+      encoding: 'utf8', // See iconv-lite encoding. Default utf8, 
+      deleteOnSuccess: false // If true, abc.txt will be deleted after split file operation is finished. Default false
+    },
+    split: {
+      encoding: 'utf8', // This is the encoding value of the divided files. Default utf8
+      lineDelimiter: '\r\n', // Line delimiter. Default \n
+      eachLines: 1000, // Divides the file by 1000 lines. Default 1000
+      allHasHeader: false, // The first line of abc.txt becomes the header. If the value is true, the header is placed on the first line of all divided files. Default false
+      storage: './' // The directory path to store the split files. It is based on the directory path of the file to be split. In the example, /var/log is the storage. Default ./
+      // storage: '../result' If you set it to ../result, it will create a directory /var/result and store the split files in /var/result.
+    }
+  }
+})
+  .then(response => {
+    // response = { storage: '/var/log', splited: 6 }
+    // This means that the divided files are stored in /var/log and the number of divided files is 6.
+    console.log(response)
+  })
+  .catch(error => {
+    console.error(error)
+  })
+  .finally(() => {
+    process.exit()
+  })
 ```
-
-### sfbl(path, [options])
-`path` string  
-`options` object
-* `allHasHeader` boolean **default** false **if true, all split file has header**
-* `encoding` string **default** utf8 **check iconv-lite**
-* `limit` number **default** 1000 **each file's max line number**
-
 License
 ----
 
